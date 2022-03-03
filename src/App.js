@@ -15,7 +15,9 @@ class UserInfo extends React.Component {
     return (
       <div>
         <h1>Hola</h1>
-        <h3>{this.props.value}</h3>
+        <p>Mi wallet:</p>
+        <text>{this.props.address}</text>
+        <h3>Tienes un saldo de: {this.props.value} ADAS </h3>
       </div>
     )
   }
@@ -24,31 +26,62 @@ class App extends React.Component {
 
   constructor(props) {
     super(props);
-    this.state = { 
-      api: null, 
+    this.state = {
+      api: null,
       adaValue: null,
-     };
+      address: null,
+    };
   }
 
   async apiStart() {
     let api = await window.cardano.nami.enable();
-    // this.setState({
-    //   api: api
-    // });
-    this.getAdaValue(api);
+    this.getData(api);
+    // this.getAdaValue(api);
+    // this.getAdress(api);
   }
+
   async getAdaValue(api) {
     //const api = this.state.value;
-    
+
     const getBalance = await api.getBalance();
     const balance = wasm.Value.from_bytes(hexToBytes(getBalance));
     const lovelaces = balance.coin().to_str();
     const adaValue = lovelaces / 1000000;
     console.log(adaValue + ' Adas');
-    
+
+    // this.setState({
+    //   api: api,
+    //   adaValue: adaValue,
+    // });
+    return adaValue;
+  }
+
+  async getAdress(api) {
+
+    const cborAdress = (await api.getUsedAddresses())[0];
+    console.log(cborAdress);
+    const decodeAdress = wasm.Address.from_bytes(hexToBytes(cborAdress));
+    console.log(decodeAdress);
+    const address = decodeAdress.to_bech32();
+    console.log(address);
+
+    return (address);
+
+    // this.setState({
+    //   api: api,
+    //   adaValue: null,
+    //   adress: address,
+    // });
+  }
+
+  async getData(api) {
+  
+    let address  = await this.getAdress(api);
+    let adaValue = await this.getAdaValue(api);
     this.setState({
       api: api,
       adaValue: adaValue,
+      address: address,
     });
   }
 
@@ -71,10 +104,11 @@ class App extends React.Component {
             rel="noopener noreferrer"
           >
           </a>
-          <body>
-            <UserInfo value={this.state.adaValue} />
-            <button onClick={() => this.apiStart()}>Conectar</button>
-          </body>
+          <UserInfo
+            value={this.state.adaValue}
+            address={this.state.address}
+          />
+          <button onClick={() => this.apiStart()}>Conectar</button>
         </header>
       </div>
     );
