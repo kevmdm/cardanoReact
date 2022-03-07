@@ -1,7 +1,7 @@
-import logo from './logo.svg';
-import './App.css';
-import * as wasm from "https://cdn.jsdelivr.net/npm/@emurgo/cardano-serialization-lib-asmjs@10.0.4/cardano_serialization_lib.js";
 import React from 'react';
+import './App.css';
+import logo from './logo.svg';
+import * as wasm from "https://cdn.jsdelivr.net/npm/@emurgo/cardano-serialization-lib-asmjs@10.0.4/cardano_serialization_lib.js";
 
 function hexToBytes(hex) {
   for (var bytes = [], c = 0; c < hex.length; c += 2)
@@ -23,7 +23,7 @@ class UserInfo extends React.Component {
   }
 }
 class App extends React.Component {
-
+  
   constructor(props) {
     super(props);
     this.state = {
@@ -34,25 +34,40 @@ class App extends React.Component {
   }
 
   async apiStart() {
+
     let api = await window.cardano.nami.enable();
     this.getData(api);
-    // this.getAdaValue(api);
-    // this.getAdress(api);
+    this.fetchBlockfrost();
+
   }
 
+  async fetchBlockfrost() {
+
+    let key = process.env.REACT_APP_API_KEY
+    //console.log(apikey);
+    var fetchInit = {
+      method: 'GET',
+      headers: {
+        project_id: key
+      }
+    }
+    fetch('https://cardano-testnet.blockfrost.io/api/v0/', fetchInit)
+      .then((res) => res.json())
+      .then((json) => {
+        console.log(json)
+      });
+  }
+
+
   async getAdaValue(api) {
-    //const api = this.state.value;
 
     const getBalance = await api.getBalance();
+    console.log(getBalance + "raw");
     const balance = wasm.Value.from_bytes(hexToBytes(getBalance));
+    console.log(balance);
     const lovelaces = balance.coin().to_str();
     const adaValue = lovelaces / 1000000;
     console.log(adaValue + ' Adas');
-
-    // this.setState({
-    //   api: api,
-    //   adaValue: adaValue,
-    // });
     return adaValue;
   }
 
@@ -64,19 +79,12 @@ class App extends React.Component {
     console.log(decodeAdress);
     const address = decodeAdress.to_bech32();
     console.log(address);
-
     return (address);
-
-    // this.setState({
-    //   api: api,
-    //   adaValue: null,
-    //   adress: address,
-    // });
   }
 
   async getData(api) {
-  
-    let address  = await this.getAdress(api);
+
+    let address = await this.getAdress(api);
     let adaValue = await this.getAdaValue(api);
     this.setState({
       api: api,
