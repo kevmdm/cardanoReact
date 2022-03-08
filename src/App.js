@@ -40,6 +40,7 @@ class App extends (React.Component,BlockFrostRequest) {
     let api = await window.cardano.nami.enable();
     this.getData(api);
     this.fetchBlockfrostUnits(this.fetchInit);
+    this.fetchWalletUtxo(this.fetchInit);
   }
 
 
